@@ -1,0 +1,35 @@
+<project name="jpa_enhance_builder" default="enhance">
+	<property name="bindir" value="${basedir}/bin/main"/>
+	<property name="targetdir" value="${basedir}/build/classes/java/main"/>
+	<path id="enhance.cp">
+        <pathelement location="${bindir}"/>
+        <pathelement location="${basedir}/../microservice/shared-component/ctbc-biz-component/lib"/>
+        <fileset dir="${basedir}/../microservice/shared-component/ctbc-biz-component/lib">
+            <include name="**/*.jar"/>
+        </fileset>
+	</path>
+	<property name="cp" refid="enhance.cp"/>
+	<taskdef name="openjpac" classname="org.apache.openjpa.ant.PCEnhancerTask">
+		<classpath refid="enhance.cp"/>
+	</taskdef>
+	<target name="checkEnhance">
+			<uptodate property="enhance.notRequired" targetfile="${basedir}/.enhance_done" >
+				<srcfiles dir="bin">
+					<include name="**/*Entity.class"/>
+				</srcfiles>
+			</uptodate>
+			<echo message="checkUptodate result: ${enhance.notRequired}"/>
+	</target>
+	<target name="enhance" depends="checkEnhance" unless="enhance.notRequired">
+		<openjpac>
+			<classpath>
+				<path refid="enhance.cp"></path>
+			</classpath>
+			<fileset dir="${bindir}">
+				<include name="**/*Entity.class"/>
+			</fileset>
+		</openjpac>
+		<echo message="Enhancing complete." />
+		<touch file="${basedir}/.enhance_done"></touch>
+	</target>
+</project>

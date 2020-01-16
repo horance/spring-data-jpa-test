@@ -1,0 +1,67 @@
+plugins {
+	id 'org.springframework.boot' version '1.5.22.RELEASE'
+	id 'io.spring.dependency-management' version '1.0.8.RELEASE'
+	id 'java'
+}
+
+group = 'demo'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '1.8'
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+//    implementation 'org.hibernate.javax.persistence:hibernate-jpa-2.1-api:1.0.0.Final'
+    implementation 'org.apache.openjpa:openjpa:2.4.1'
+
+	runtimeOnly 'com.h2database:h2'
+	testImplementation('org.springframework.boot:spring-boot-starter-test') {
+		exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+	}
+}
+
+test {
+	useJUnitPlatform()
+}
+
+task openJPAEnhance {
+    description "Enhance JPA model classes using OpenJPA Enhancer"
+    dependsOn compileJava
+
+    doLast {
+        // define the entity classes
+        def entityFiles = fileTree(sourceSets.main.output.classesDir).matching {
+            include '**/*Entity.class'
+        }
+
+        println "Enhancing with OpenJPA, the following files..."
+        entityFiles.getFiles().each {
+            println it
+        }
+		
+		def openjpacClasspath = sourceSets.main.runtimeClasspath + files('lib')
+		
+        // define Ant task for Enhancer
+        ant.taskdef(
+            name : 'openjpac',
+            classpath : openjpacClasspath.asPath,
+            classname : 'org.apache.openjpa.ant.PCEnhancerTask'
+        )
+
+        // Run the OpenJPA Enhancer as an Ant task
+        //   - see OpenJPA 'PCEnhancerTask' for supported arguments
+        //   - this invocation of the enhancer adds support for a default-ctor
+        //   - as well as ensuring JPA property use is valid.
+        ant.openjpac(
+            classpath: sourceSets.main.runtimeClasspath.asPath,
+            addDefaultConstructor: true,
+            enforcePropertyRestrictions: true) {
+            entityFiles.addToAntBuilder(ant, 'fileset', FileCollection.AntType.FileSet)
+        }
+    }
+}
+
+classes.dependsOn openJPAEnhance

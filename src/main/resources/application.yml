@@ -1,0 +1,18 @@
+spring:
+  jpa:
+    generate-ddl: true
+    showSql: true
+    properties:
+      openjpa.Log: commons
+      openjpa.ConnectionFactoryProperties: PrintParameters=True, PrettyPrint=true
+      openjpa.jdbc.DBDictionary: h2(batchLimit=0,nativeSequenceType=1,disableAlterSeqenceIncrementBy=true)
+      openjpa.ConnectionRetainMode: transaction
+  datasource:
+    url: jdbc:h2:mem:testdb
+
+vendor: openjpa
+
+logging:
+  level:
+    org.hibernate: TRACE
+    openjpa: TRACE
